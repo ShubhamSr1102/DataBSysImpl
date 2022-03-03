@@ -220,7 +220,7 @@ int BigQ::addRunToFileMethod(vector<Record *> &vector) {
 }
 
 void BigQ::sortRunMethod(vector<Record *> &vector) {
-	sort(vector.begin(), vector.end(), RecordComparator(sortedOrder));
+	sort(vector.begin(), vector.end(), RecordComparator(sortOrder));
 }
 
 
