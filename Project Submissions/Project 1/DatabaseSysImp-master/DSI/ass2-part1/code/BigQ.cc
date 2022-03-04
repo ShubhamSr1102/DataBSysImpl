@@ -55,7 +55,7 @@ BigQ ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 
 	this -> inPipe = &in;
 	this -> outPipe = &out;
-	this -> sortOrderPointer = &sortorder;
+	this -> sortedOrderPointer = &sortorder;
 	this -> runLen = &runlen;
 
 	this -> file = new File();
@@ -141,7 +141,7 @@ void BigQ::workerMethod() {
 	this -> file = new File();
 	file -> Open(1, "runs.bin");
 	typedef priority_queue<PriorityQueue_Record *, std::vector<PriorityQueue_Record *>, PriorityQueue_Comparator> priorityQueue_merger_type;
-	priorityQueue_merger_type priorityQueue_Merger(sortOrderPointer);
+	priorityQueue_merger_type priorityQueue_Merger(sortedOrderPointer);
 	
 	Page *runBuffers[numberOfRuns];
 
@@ -220,7 +220,7 @@ int BigQ::addRunToFileMethod(vector<Record *> &vector) {
 }
 
 void BigQ::sortRunMethod(vector<Record *> &vector) {
-	sort(vector.begin(), vector.end(), RecordComparator(sortOrderPointer));
+	sort(vector.begin(), vector.end(), RecordComparator(sortedOrderPointer));
 }
 
 
