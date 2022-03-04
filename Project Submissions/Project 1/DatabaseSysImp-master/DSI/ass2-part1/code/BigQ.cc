@@ -79,7 +79,7 @@ void *BigQ::invokeTPMMSAlgo(void *args) {
 
 void BigQ::workerMethod() {
 
-	int runLen = *runLen;
+	int runLen = *runlen;
 
 	int pagesExecuting = 0;
 
