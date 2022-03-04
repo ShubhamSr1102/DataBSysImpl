@@ -15,16 +15,16 @@ struct PriorityQueue_Record {
 
 class PriorityQueue_Comparator {
 	private:
-		OrderMaker *sortOrder;
+		OrderMaker *sortOrderPointer;
 		ComparisonEngine compEngine;
 
 	public:
 		PriorityQueue_Comparator(OrderMaker *sortOrder) {
-			this -> sortOrder = sortOrder;
+			this -> sortOrderPointer = sortOrder;
 		}
 
 		bool operator()(PriorityQueue_Record *recordOne, PriorityQueue_Record *recordTwo) {
-			if (compEngine.Compare(recordOne -> currentRecord, recordTwo -> currentRecord, sortOrder) > 0)
+			if (compEngine.Compare(recordOne -> currentRecord, recordTwo -> currentRecord, sortOrderPointer) > 0)
 				return true;
 
 			return false;
@@ -34,16 +34,16 @@ class PriorityQueue_Comparator {
 
 class RecordComparator {
 	private:
-		OrderMaker *sortOrder;
+		OrderMaker *sortOrderPointer;
 		ComparisonEngine compEngine;
 
 	public:
-		RecordComparator(OrderMaker *sortOrder) {
-			this -> sortOrder = sortOrder;
+		RecordComparator(OrderMaker *sortOrderPointer) {
+			this -> sortOrderPointer = sortOrderPointer;
 		}
 
 		bool operator()(Record *recordOne, Record *recordTwo) {
-			if (compEngine.Compare(recordOne, recordTwo, sortOrder) < 0)
+			if (compEngine.Compare(recordOne, recordTwo, sortOrderPointer) < 0)
 				return true;
 
 			return false;
@@ -55,7 +55,7 @@ BigQ ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 
 	this -> inPipe = &in;
 	this -> outPipe = &out;
-	this -> sortOrder = &sortorder;
+	this -> sortOrderPointer = &sortorder;
 	this -> runLen = &runlen;
 
 	this -> file = new File();
@@ -141,7 +141,7 @@ void BigQ::workerMethod() {
 	this -> file = new File();
 	file -> Open(1, "runs.bin");
 	typedef priority_queue<PriorityQueue_Record *, std::vector<PriorityQueue_Record *>, PriorityQueue_Comparator> priorityQueue_merger_type;
-	priorityQueue_merger_type priorityQueue_Merger(sortOrder);
+	priorityQueue_merger_type priorityQueue_Merger(sortOrderPointer);
 	
 	Page *runBuffers[numberOfRuns];
 
@@ -220,7 +220,7 @@ int BigQ::addRunToFileMethod(vector<Record *> &vector) {
 }
 
 void BigQ::sortRunMethod(vector<Record *> &vector) {
-	sort(vector.begin(), vector.end(), RecordComparator(sortOrder));
+	sort(vector.begin(), vector.end(), RecordComparator(sortOrderPointer));
 }
 
 
