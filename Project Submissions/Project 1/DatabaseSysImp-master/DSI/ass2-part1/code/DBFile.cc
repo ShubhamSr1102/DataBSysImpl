@@ -23,13 +23,13 @@ DBFile::DBFile () {
 
 
 int DBFile::Create (const char *f_path, fType f_type, void *startup) {
-    char meta_data[100];
-    strcpy(meta_data , f_path);
-    strcat(meta_data , "-metadata.header");
+    char metaDataArrray[100];
+    strcpy(metaDataArrray , f_path);
+    strcat(metaDataArrray , "-metadata.header");
 
     this -> isEmptyWBuffer = true;
     ofstream outputFileStream;
-    outputFileStream.open(meta_data);
+    outputFileStream.open(metaDataArrray);
 
     if (f_type == heap) {
         outputFileStream << "Heap file created.\n";
@@ -45,6 +45,7 @@ void DBFile::Load (Schema &f_schema, const char *loadpath) {
     FILE  *inputFileStream = fopen(loadpath , "r");
     Record currentRecord;
     while(currentRecord.SuckNextRecord( &f_schema , inputFileStream ) == 1){
+       
         this -> Add(currentRecord);
     }
     fclose(inputFileStream);
@@ -107,8 +108,8 @@ void DBFile::Add (Record &rec) {
 
 int DBFile::GetNext (Record &fetchme) {
     if(this -> endOfFile == false) {
-        int result = this -> rBuffer -> GetFirst(&fetchme);
-        if(result == 0) {
+        int res = this -> rBuffer -> GetFirst(&fetchme);
+        if(res == 0) {
             pageIndex++;
             if(pageIndex >= this -> fBuffer -> GetLength() - 1) {
                 this -> endOfFile = true;
@@ -124,7 +125,6 @@ int DBFile::GetNext (Record &fetchme) {
     }
 
     return 0; 
-}
 
 
 int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
@@ -132,7 +132,7 @@ int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
 
     while(GetNext(fetchme)) {
         if(compEngine.Compare(&fetchme,&literal,&cnf))
-            return 1;   
+            return 1;  
     }
 
     return 0; 

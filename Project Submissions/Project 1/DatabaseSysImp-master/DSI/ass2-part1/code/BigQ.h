@@ -10,14 +10,15 @@
 
 using namespace std;
 
+
 class BigQ {
 
 	private:
 		Pipe *inPipe;	
-		Pipe *outPipe;	
+		Pipe *outPipe;
 		OrderMaker *postSortOrder;	
 		int *runLen;	
-		File *file;	
+		File *file;	 
 		vector<int> runPointersList;	
 
 	public:
@@ -25,11 +26,11 @@ class BigQ {
 
 		void workerMethod();
 		
-		static void* invokeTPMMSAlgo(void *args);
+		static void* invokeTPMMSAlgo( void *args );
 		
-		void sortRunMethod(vector <Record*> &);
+		void sortRunMethod( vector <Record*> &);
 		
-		int addRunToFileMethod(vector <Record*> & );
+		int initiateFiletoRun(vector <Record*> & );
 
 		~BigQ ();
 };

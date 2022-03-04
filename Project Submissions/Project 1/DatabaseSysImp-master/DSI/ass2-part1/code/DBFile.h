@@ -13,8 +13,8 @@ typedef enum {heap, sorted, tree} fType;
 class DBFile {
 
 	private:
-		File *fBuffer;	
-		Page *wBuffer; 
+		File *fBuffer;	 
+		Page *wBuffer;	
 		Page *rBuffer;	
 		bool isEmptyWBuffer;	
 		bool endOfFile;	

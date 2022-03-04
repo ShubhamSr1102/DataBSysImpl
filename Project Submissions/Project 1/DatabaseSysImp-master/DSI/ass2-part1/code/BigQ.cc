@@ -31,7 +31,6 @@ class PriorityQueue_Comparator {
 		}
 };
 
-
 class RecordComparator {
 	private:
 		OrderMaker *sortOrderPointer;
@@ -80,9 +79,9 @@ void *BigQ::invokeTPMMSAlgo(void *args) {
 
 void BigQ::workerMethod() {
 
-	int runlen = *runLen;
+	int runLen = *runLen;
 
-	int pagesCurrentlyExecuting = 0;
+	int pagesExecuting = 0;
 
 	Page *bufferPage = new Page();
 
@@ -90,112 +89,115 @@ void BigQ::workerMethod() {
 
 	runPointersList.push_back(0);
 	
-	vector<Record *> currentExecutingVector;
+	vector<Record *> currentRunVector;
 	
 	int numberOfRuns = 0;
 
-	Record *temporaryRecord = new Record();
+	Record *tempRecord = new Record();
 
 	while (inPipe -> Remove(currentRecord)) {
 
-		if (pagesCurrentlyExecuting < runlen) {
+		if (pagesExecuting < runLen) {
 
 			int res = bufferPage -> Append(currentRecord);
 			if (res == 0) {
-				pagesCurrentlyExecuting++;
+				pagesExecuting++;
 
-				while (bufferPage -> GetFirst(temporaryRecord)) {
-					currentExecutingVector.push_back(temporaryRecord);
-					temporaryRecord = new Record();
+				while (bufferPage -> GetFirst(tempRecord)) {
+					currentRunVector.push_back(tempRecord);
+					tempRecord = new Record();
 				}
 
 				bufferPage -> EmptyItOut();
 				bufferPage -> Append(currentRecord);
 			}
 		} else {
-			pagesCurrentlyExecuting = 0;
+			pagesExecuting = 0;
 
-			this -> sortRunMethod(currentExecutingVector);
+			this -> sortRunMethod(currentRunVector);
 			numberOfRuns++;
 			
-			int runhead = this -> addRunToFileMethod(currentExecutingVector);
+			int executeHead = this -> initiateFiletoRun(currentRunVector);
 
-			this -> runPointersList.push_back(runhead);
-			currentExecutingVector.clear();
+			this -> runPointersList.push_back(executeHead);
+			currentRunVector.clear();
 			bufferPage -> Append(currentRecord);
 		}
 	}
 
 	numberOfRuns++;
-	while (bufferPage -> GetFirst(temporaryRecord)) {
-		currentExecutingVector.push_back(temporaryRecord);
-		temporaryRecord = new Record();
+	while (bufferPage -> GetFirst(tempRecord)) {
+		currentRunVector.push_back(tempRecord);
+		tempRecord = new Record();
 	}
 
-	this -> sortRunMethod(currentExecutingVector);
-	int executeHead = this -> addRunToFileMethod(currentExecutingVector);
+	this -> sortRunMethod(currentRunVector);
+	int executeHead = this -> initiateFiletoRun(currentRunVector);
 	this -> runPointersList.push_back(executeHead);
-	currentExecutingVector.clear();
+	currentRunVector.clear();
 	this -> file -> Close();
 
 	this -> file = new File();
 	file -> Open(1, "runs.bin");
 	typedef priority_queue<PriorityQueue_Record *, std::vector<PriorityQueue_Record *>, PriorityQueue_Comparator> priorityQueue_merger_type;
-	priorityQueue_merger_type priorityQueue_Merger(postSortOrder);
+	priorityQueue_merger_type priorityQueue_merger(postSortOrder);
 	
-	Page *runBuffers[numberOfRuns];
+
+	Page *runPageBuffers[numberOfRuns];
 
 	PriorityQueue_Record *priorityQueue_Record = new PriorityQueue_Record();
 	currentRecord = new Record();
 
-	int count = 0;
-	while (count < numberOfRuns) {
-		runBuffers[count] = new Page();
-		file -> GetPage(runBuffers[count], this -> runPointersList[count]);
-		runBuffers[count] -> GetFirst(currentRecord);
+	int i = 0;
+
+	while (i < numberOfRuns) {
+		runPageBuffers[i] = new Page();
+		file -> GetPage(runPageBuffers[i], this -> runPointersList[i]);
+		runPageBuffers[i] -> GetFirst(currentRecord);
 		priorityQueue_Record -> currentRecord = currentRecord;
-		priorityQueue_Record -> pageNumber = this -> runPointersList[count];
-		priorityQueue_Record -> bufferNumber = count;
-		priorityQueue_Merger.push(priorityQueue_Record);
+		priorityQueue_Record -> pageNumber = this -> runPointersList[i];
+		priorityQueue_Record -> bufferNumber = i;
+		priorityQueue_merger.push(priorityQueue_Record);
 		priorityQueue_Record = new PriorityQueue_Record();
 		currentRecord = new Record();
-		count++;
+		i++;
 	}
 
-	while (!priorityQueue_Merger.empty()) {
-		priorityQueue_Record = priorityQueue_Merger.top();
+	while (!priorityQueue_merger.empty()) {
+		priorityQueue_Record = priorityQueue_merger.top();
 		int pageNumber = priorityQueue_Record -> pageNumber;
 		int bufferNumber = priorityQueue_Record -> bufferNumber;
 		this -> outPipe -> Insert(priorityQueue_Record -> currentRecord);
-		priorityQueue_Merger.pop();
+		priorityQueue_merger.pop();
 
 		Record *record = new Record();
-		if (runBuffers[bufferNumber] -> GetFirst(record) == 0) {
+		if (runPageBuffers[bufferNumber] -> GetFirst(record) == 0) {
 
 			pageNumber = pageNumber + 1;
 			if (pageNumber < (file -> GetLength() - 1) && (pageNumber < this -> runPointersList[bufferNumber + 1])) {
-				runBuffers[bufferNumber] -> EmptyItOut();
-				file -> GetPage(runBuffers[bufferNumber], pageNumber);
+				runPageBuffers[bufferNumber] -> EmptyItOut();
+				file -> GetPage(runPageBuffers[bufferNumber], pageNumber);
 
-				if (runBuffers[bufferNumber] -> GetFirst(record) != 0) {
+				if (runPageBuffers[bufferNumber] -> GetFirst(record) != 0) {
 					priorityQueue_Record -> currentRecord = record;
 					priorityQueue_Record -> bufferNumber = bufferNumber;
 					priorityQueue_Record -> pageNumber = pageNumber;
-					priorityQueue_Merger.push(priorityQueue_Record);
+					priorityQueue_merger.push(priorityQueue_Record);
 				}
 			}
 		} else {
 			priorityQueue_Record -> currentRecord = record;
 			priorityQueue_Record -> bufferNumber = bufferNumber;
 			priorityQueue_Record -> pageNumber = pageNumber;
-			priorityQueue_Merger.push(priorityQueue_Record);
+			priorityQueue_merger.push(priorityQueue_Record);
 		}
 	}
 
 	file -> Close();
 }
 
-int BigQ::addRunToFileMethod(vector<Record *> &vector) {
+
+int BigQ::initiateFiletoRun(vector<Record *> &vector) {
 	Page *bufferPage = new Page();
 
 	for (int i = 0; i < vector.size(); i++) {
@@ -218,6 +220,7 @@ int BigQ::addRunToFileMethod(vector<Record *> &vector) {
 
 	return this -> file -> GetLength() - 1; 
 }
+
 
 void BigQ::sortRunMethod(vector<Record *> &vector) {
 	sort(vector.begin(), vector.end(), RecordComparator(postSortOrder));
