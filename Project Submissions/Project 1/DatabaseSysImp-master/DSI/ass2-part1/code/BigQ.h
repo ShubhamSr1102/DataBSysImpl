@@ -17,7 +17,7 @@ class BigQ {
 		Pipe *inPipe;	
 		Pipe *outPipe;
 		OrderMaker *postSortOrder;	
-		int *runLen;	
+		int *runLengthVar;	
 		File *file;	 
 		vector<int> runPointersList;	
 

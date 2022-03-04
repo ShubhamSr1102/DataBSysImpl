@@ -55,7 +55,7 @@ BigQ ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 	this -> inPipe = &in;
 	this -> outPipe = &out;
 	this -> postSortOrder = &sortorder;
-	this -> runLen = &runlen;
+	this -> runLengthVar = &runlen;
 
 	this -> file = new File();
 	this -> file -> Open(0, "runs.bin");
@@ -79,7 +79,7 @@ void *BigQ::invokeTPMMSAlgo(void *args) {
 
 void BigQ::workerMethod() {
 
-	int runLen = *runlen;
+	int runLen = *runLengthVar;
 
 	int pagesExecuting = 0;
 
