@@ -19,8 +19,8 @@ class PriorityQueue_Comparator {
 		ComparisonEngine compEngine;
 
 	public:
-		PriorityQueue_Comparator(OrderMaker *sortOrder) {
-			this -> sortOrderPointer = sortOrder;
+		PriorityQueue_Comparator(OrderMaker *sortOrderPointer) {
+			this -> sortOrderPointer = sortOrderPointer;
 		}
 
 		bool operator()(PriorityQueue_Record *recordOne, PriorityQueue_Record *recordTwo) {
@@ -55,7 +55,7 @@ BigQ ::BigQ(Pipe &in, Pipe &out, OrderMaker &sortorder, int runlen) {
 
 	this -> inPipe = &in;
 	this -> outPipe = &out;
-	this -> sortedOrderPointer = &sortorder;
+	this -> postSortOrder = &sortorder;
 	this -> runLen = &runlen;
 
 	this -> file = new File();
@@ -141,7 +141,7 @@ void BigQ::workerMethod() {
 	this -> file = new File();
 	file -> Open(1, "runs.bin");
 	typedef priority_queue<PriorityQueue_Record *, std::vector<PriorityQueue_Record *>, PriorityQueue_Comparator> priorityQueue_merger_type;
-	priorityQueue_merger_type priorityQueue_Merger(sortedOrderPointer);
+	priorityQueue_merger_type priorityQueue_Merger(sortOrderPointer);
 	
 	Page *runBuffers[numberOfRuns];
 
@@ -220,7 +220,7 @@ int BigQ::addRunToFileMethod(vector<Record *> &vector) {
 }
 
 void BigQ::sortRunMethod(vector<Record *> &vector) {
-	sort(vector.begin(), vector.end(), RecordComparator(sortedOrderPointer));
+	sort(vector.begin(), vector.end(), RecordComparator(sortOrderPointer));
 }
 
 
